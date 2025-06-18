@@ -11,13 +11,13 @@
 
 paddle::Tensor MoeWna16MarlinGemmApi(
     const paddle::Tensor& a,
-    const std::optional<paddle::Tensor>& c_or_none,
+    const paddle::optional<paddle::Tensor>& c_or_none,
     const paddle::Tensor& b_q_weight,
     const paddle::Tensor& b_scales,
-    const std::optional<paddle::Tensor>& global_scale_or_none,
-    const std::optional<paddle::Tensor>& b_zeros_or_none,
-    const std::optional<paddle::Tensor>& g_idx_or_none,
-    const std::optional<paddle::Tensor>& perm_or_none,
+    const paddle::optional<paddle::Tensor>& global_scale_or_none,
+    const paddle::optional<paddle::Tensor>& b_zeros_or_none,
+    const paddle::optional<paddle::Tensor>& g_idx_or_none,
+    const paddle::optional<paddle::Tensor>& perm_or_none,
     const paddle::Tensor& workspace,
     const paddle::Tensor& sorted_token_ids,
     const paddle::Tensor& expert_ids,

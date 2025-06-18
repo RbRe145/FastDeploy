@@ -1102,8 +1102,6 @@ std::vector<paddle::DataType> MoeWna16MarlinGemmInferDtype(
     const paddle::DataType& topk_weights_dtype) {
   return {a_dtype};
 }
-#endif
-
 PD_BUILD_STATIC_OP(moe_wna16_marlin_gemm)
     .Inputs({"a", paddle::Optional("c_or_none"), "b_q_weight", "b_scales",
              paddle::Optional("global_scale_or_none"), paddle::Optional("b_zeros_or_none"),
@@ -1118,3 +1116,6 @@ PD_BUILD_STATIC_OP(moe_wna16_marlin_gemm)
     .SetKernelFn(PD_KERNEL(MoeWna16MarlinGemmApi))
     .SetInferShapeFn(PD_INFER_SHAPE(MoeWna16MarlinGemmInferShape))
     .SetInferDtypeFn(PD_INFER_DTYPE(MoeWna16MarlinGemmInferDtype));
+
+#endif
+
