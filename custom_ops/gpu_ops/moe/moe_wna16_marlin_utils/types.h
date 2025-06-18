@@ -19,7 +19,7 @@
 #include "moe/moe_wna16_marlin_utils/ScalarType.h"
 #include "paddle/phi/api/include/tensor.h"
 #include "paddle/phi/core/dense_tensor.h"
-#include "paddle/phi/core/memory/malloc.h"
+// #include "paddle/phi/core/memory/malloc.h"
 
 namespace MARLIN_NAMESPACE_NAME {
 
