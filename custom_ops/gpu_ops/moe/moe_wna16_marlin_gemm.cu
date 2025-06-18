@@ -663,37 +663,8 @@ void marlin_mm(const void* A, const void* B, void* C, void* C_tmp, void* s,
   // clang-format on
 }
 
+
 }  // namespace MARLIN_NAMESPACE_NAME
-
-paddle::Tensor ConvertPaddleTensorToDetailTensor(
-    const paddle::Tensor& tensor) {
-  paddle::Tensor res(tensor);
-  return res;
-}
-
-paddle::Tensor ConvertDetailTensorToPaddleTensor(
-    const paddle::Tensor& tensor) {
-  return tensor.raw_tensor();
-}
-
-std::optional<paddle::Tensor>
-ConvertOptionalPaddleTensorToDetailTensor(
-    const std::optional<paddle::Tensor>& tensor) {
-  std::optional<paddle::Tensor> res;
-  if (tensor.has_value()) {
-    res = ConvertPaddleTensorToDetailTensor(tensor.value());
-  }
-  return res;
-}
-
-std::optional<paddle::Tensor> ConvertOptionalDetailTensorToPaddleTensor(
-    const std::optional<paddle::Tensor>& tensor) {
-  std::optional<paddle::Tensor> res;
-  if (tensor.has_value()) {
-    res = ConvertDetailTensorToPaddleTensor(tensor.value());
-  }
-  return res;
-}
 
 paddle::Tensor moe_wna16_marlin_gemm(
   const paddle::Tensor& a,
@@ -800,7 +771,7 @@ paddle::Tensor moe_wna16_marlin_gemm(
     PADDLE_ENFORCE(c.size(1) == size_n, "Shape mismatch: c.size(1) = ", c.size(1),
                 ", size_n = ", size_n);
   } else {
-    c = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({size_m * top_k, size_n}, a.dtype(), phi::GPUPlace(device_id)));
+    c = paddle::experimental::empty({size_m * top_k, size_n}, a.dtype(), phi::GPUPlace(device_id));
   }
 
   // Alloc C tmp buffer that is going to be used for the global reduce
@@ -811,9 +782,9 @@ paddle::Tensor moe_wna16_marlin_gemm(
         (long)size_n * sorted_token_ids.size(0),
         (long)sms * 4 * moe_block_size * MARLIN_NAMESPACE_NAME::max_thread_n);
     if (moe_block_size == 8) max_c_tmp_size *= 2;
-    c_tmp = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({max_c_tmp_size}, MARLIN_NAMESPACE_NAME::kFloat32, phi::GPUPlace(device_id)));
+    c_tmp = paddle::experimental::empty({max_c_tmp_size}, MARLIN_NAMESPACE_NAME::kFloat32, phi::GPUPlace(device_id));
   } else {
-    c_tmp = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({0}, MARLIN_NAMESPACE_NAME::kFloat32, phi::GPUPlace(device_id)));
+    c_tmp = paddle::experimental::empty({0}, MARLIN_NAMESPACE_NAME::kFloat32, phi::GPUPlace(device_id));
   }
 
   // Detect groupsize and act_order
@@ -845,16 +816,16 @@ paddle::Tensor moe_wna16_marlin_gemm(
 
     has_act_order = g_idx.size(-1) > 0 && perm.size(-1) > 0;
   } else {
-    g_idx = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id)));
+    g_idx = paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id));
 
-    perm = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id)));
+    perm = paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id));
 
-    a_tmp = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id)));
+    a_tmp = paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id));
 
   }
 
   if (has_act_order) {
-    a_tmp = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({size_m * top_k, size_k}, a.dtype(), phi::GPUPlace(device_id)));
+    a_tmp = paddle::experimental::empty({size_m * top_k, size_k}, a.dtype(), phi::GPUPlace(device_id));
 
     if (is_k_full) {
       PADDLE_ENFORCE(num_groups > 1, "For act_order, num_groups must be > 1");
@@ -866,7 +837,7 @@ paddle::Tensor moe_wna16_marlin_gemm(
     }
 
   } else {
-    a_tmp = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id)));
+    a_tmp = paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id));
 
     if (num_groups > 1) {
       PADDLE_ENFORCE(
@@ -884,7 +855,7 @@ paddle::Tensor moe_wna16_marlin_gemm(
     PADDLE_ENFORCE(b_q_type == MARLIN_NAMESPACE_NAME::kFE2M1f,
                 "global_scale can only be used for float4_e2m1f.");
   } else {
-    global_scale = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id)));
+    global_scale = paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id));
 
     PADDLE_ENFORCE(!(b_q_type == MARLIN_NAMESPACE_NAME::kFE2M1f),
                 "the global_scale parameter must be passed for float4_e2m1f.");
@@ -896,7 +867,7 @@ paddle::Tensor moe_wna16_marlin_gemm(
     PADDLE_ENFORCE(b_zeros.is_gpu(), "b_zeros is not on GPU");
     PADDLE_ENFORCE(b_zeros.is_contiguous(), "b_zeros is not contiguous");
   } else {
-    b_zeros = ConvertPaddleTensorToDetailTensor(paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id)));
+    b_zeros = paddle::experimental::empty({0}, a.dtype(), phi::GPUPlace(device_id));
   }
   bool has_zp = b_zeros.numel() > 0;
 
