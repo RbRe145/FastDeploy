@@ -677,21 +677,12 @@ paddle::Tensor ConvertDetailTensorToPaddleTensor(
   return tensor.raw_tensor();
 }
 
-MARLIN_NAMESPACE_NAME::Tensor
+const paddle::optional<MARLIN_NAMESPACE_NAME::Tensor>
 ConvertOptionalPaddleTensorToDetailTensor(
     const paddle::optional<paddle::Tensor>& tensor) {
   paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> res;
   if (tensor) {
-    res = ConvertPaddleTensorToDetailTensor(tensor);
-  }
-  return res;
-}
-
-paddle::Tensor ConvertOptionalDetailTensorToPaddleTensor(
-    const paddle::optional<MARLIN_NAMESPACE_NAME::Tensor>& tensor) {
-  paddle::optional<paddle::Tensor> res;
-  if (tensor) {
-    res = ConvertDetailTensorToPaddleTensor(tensor.get_ptr());
+    res = ConvertPaddleTensorToDetailTensor(tensor.get());
   }
   return res;
 }
@@ -771,7 +762,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
   // auto options = torch::TensorOptions().dtype(a.dtype()).device(a.device());
   MARLIN_NAMESPACE_NAME::Tensor c;
   if (c_or_none) {
-    c = c_or_none.value();
+    c = c_or_none.get();
     PADDLE_ENFORCE(c.is_gpu(), "c is not on GPU");
     PADDLE_ENFORCE(c.is_contiguous(), "c is not contiguous");
     PADDLE_ENFORCE(c.size(0) == size_m * top_k,
@@ -808,8 +799,8 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
   bool has_act_order = false;
   MARLIN_NAMESPACE_NAME::Tensor g_idx, perm, a_tmp;
   if (g_idx_or_none && perm_or_none) {
-    g_idx = g_idx_or_none.value();
-    perm = perm_or_none.value();
+    g_idx = g_idx_or_none.get();
+    perm = perm_or_none.get();
 
     PADDLE_ENFORCE(g_idx.is_gpu(), "g_idx is not on GPU");
     PADDLE_ENFORCE(g_idx.is_contiguous(), "g_idx is not contiguous");
@@ -860,7 +851,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
 
   MARLIN_NAMESPACE_NAME::Tensor global_scale;
   if (global_scale_or_none) {
-    global_scale = global_scale_or_none.value();
+    global_scale = global_scale_or_none.get();
     PADDLE_ENFORCE(b_q_type == MARLIN_NAMESPACE_NAME::kFE2M1f,
                 "global_scale can only be used for float4_e2m1f.");
   } else {
@@ -872,7 +863,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
 
   MARLIN_NAMESPACE_NAME::Tensor b_zeros;
   if (b_zeros_or_none) {
-    b_zeros = b_zeros_or_none.value();
+    b_zeros = b_zeros_or_none.get();
     PADDLE_ENFORCE(b_zeros.is_gpu(), "b_zeros is not on GPU");
     PADDLE_ENFORCE(b_zeros.is_contiguous(), "b_zeros is not contiguous");
   } else {
@@ -1124,6 +1115,6 @@ PD_BUILD_STATIC_OP(moe_wna16_marlin_gemm)
             "is_ep:bool", "b_q_type_str:std::string", "size_m:int",
             "size_n:int", "size_k:int", "is_k_full:bool",
             "use_atomic_add:bool", "use_fp32_reduce:bool", "is_zp_float:bool"})
-    .SetKernelFn(PD_KERNEL(MARLIN_NAMESPACE_NAME::MoeWna16MarlinGemmApi))
-    .SetInferShapeFn(PD_INFER_SHAPE(MARLIN_NAMESPACE_NAME::MoeWna16MarlinGemmInferShape))
-    .SetInferDtypeFn(PD_INFER_DTYPE(MARLIN_NAMESPACE_NAME::MoeWna16MarlinGemmInferDtype));
+    .SetKernelFn(PD_KERNEL(MoeWna16MarlinGemmApi))
+    .SetInferShapeFn(PD_INFER_SHAPE(MoeWna16MarlinGemmInferShape))
+    .SetInferDtypeFn(PD_INFER_DTYPE(MoeWna16MarlinGemmInferDtype));
