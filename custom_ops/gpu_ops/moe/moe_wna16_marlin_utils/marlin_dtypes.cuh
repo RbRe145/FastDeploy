@@ -9,7 +9,7 @@
   #define MARLIN_NAMESPACE_NAME marlin_moe_wna16
 #endif
 
-namespace MARLIN_NAMESPACE_NAME {
+namespace MARLIN_NAMESPACE_NAME::kernel_types {
 
 template <typename scalar_t>
 class ScalarType {};

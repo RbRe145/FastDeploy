@@ -28,6 +28,7 @@
 #include "moe/moe_wna16_marlin_utils/kernel.h"
 #include "moe/moe_wna16_marlin_utils/types.h"
 #include "moe/moe_wna16_marlin_gemm.h"
+#include "helper.h"
 
 #include <cuda.h>
 #include <cuda_fp16.h>
@@ -59,11 +60,11 @@ __global__ void permute_cols_kernel(
 }  // namespace marlin
 
 MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
-    MARLIN_NAMESPACE_NAME::Tensor& a, std::optional<MARLIN_NAMESPACE_NAME::Tensor> const& c_or_none,
+    MARLIN_NAMESPACE_NAME::Tensor& a, paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> const& c_or_none,
     MARLIN_NAMESPACE_NAME::Tensor& b_q_weight, MARLIN_NAMESPACE_NAME::Tensor& b_scales,
-    std::optional<MARLIN_NAMESPACE_NAME::Tensor> const& b_zeros_or_none,
-    std::optional<MARLIN_NAMESPACE_NAME::Tensor> const& g_idx_or_none,
-    std::optional<MARLIN_NAMESPACE_NAME::Tensor> const& perm_or_none, MARLIN_NAMESPACE_NAME::Tensor& workspace,
+    paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> const& b_zeros_or_none,
+    paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> const& g_idx_or_none,
+    paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> const& perm_or_none, MARLIN_NAMESPACE_NAME::Tensor& workspace,
     MARLIN_NAMESPACE_NAME::Tensor& sorted_token_ids, MARLIN_NAMESPACE_NAME::Tensor& expert_ids,
     MARLIN_NAMESPACE_NAME::Tensor& num_tokens_past_padded, MARLIN_NAMESPACE_NAME::Tensor& topk_weights,
     int64_t moe_block_size, int64_t top_k, bool mul_topk_weights, bool is_ep,
@@ -676,32 +677,32 @@ paddle::Tensor ConvertDetailTensorToPaddleTensor(
   return tensor.raw_tensor();
 }
 
-std::optional<MARLIN_NAMESPACE_NAME::Tensor>
+MARLIN_NAMESPACE_NAME::Tensor
 ConvertOptionalPaddleTensorToDetailTensor(
-    const std::optional<paddle::Tensor>& tensor) {
-  std::optional<MARLIN_NAMESPACE_NAME::Tensor> res;
-  if (tensor.has_value()) {
-    res = ConvertPaddleTensorToDetailTensor(tensor.value());
+    const paddle::optional<paddle::Tensor>& tensor) {
+  paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> res;
+  if (tensor) {
+    res = ConvertPaddleTensorToDetailTensor(tensor);
   }
   return res;
 }
 
-std::optional<paddle::Tensor> ConvertOptionalDetailTensorToPaddleTensor(
-    const std::optional<MARLIN_NAMESPACE_NAME::Tensor>& tensor) {
-  std::optional<paddle::Tensor> res;
-  if (tensor.has_value()) {
-    res = ConvertDetailTensorToPaddleTensor(tensor.value());
+paddle::Tensor ConvertOptionalDetailTensorToPaddleTensor(
+    const paddle::optional<MARLIN_NAMESPACE_NAME::Tensor>& tensor) {
+  paddle::optional<paddle::Tensor> res;
+  if (tensor) {
+    res = ConvertDetailTensorToPaddleTensor(tensor.get_ptr());
   }
   return res;
 }
 
 MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
-    MARLIN_NAMESPACE_NAME::Tensor& a, std::optional<MARLIN_NAMESPACE_NAME::Tensor> const& c_or_none,
+    MARLIN_NAMESPACE_NAME::Tensor& a, paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> const& c_or_none,
     MARLIN_NAMESPACE_NAME::Tensor& b_q_weight, MARLIN_NAMESPACE_NAME::Tensor& b_scales,
-    std::optional<MARLIN_NAMESPACE_NAME::Tensor> const& global_scale_or_none,
-    std::optional<MARLIN_NAMESPACE_NAME::Tensor> const& b_zeros_or_none,
-    std::optional<MARLIN_NAMESPACE_NAME::Tensor> const& g_idx_or_none,
-    std::optional<MARLIN_NAMESPACE_NAME::Tensor> const& perm_or_none, MARLIN_NAMESPACE_NAME::Tensor& workspace,
+    paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> const& global_scale_or_none,
+    paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> const& b_zeros_or_none,
+    paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> const& g_idx_or_none,
+    paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> const& perm_or_none, MARLIN_NAMESPACE_NAME::Tensor& workspace,
     MARLIN_NAMESPACE_NAME::Tensor& sorted_token_ids, MARLIN_NAMESPACE_NAME::Tensor& expert_ids,
     MARLIN_NAMESPACE_NAME::Tensor& num_tokens_past_padded, MARLIN_NAMESPACE_NAME::Tensor& topk_weights,
     int64_t moe_block_size, int64_t top_k, bool mul_topk_weights, bool is_ep,
@@ -769,7 +770,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
   // const at::cuda::OptionalCUDAGuard device_guard(device_of(a));
   // auto options = torch::TensorOptions().dtype(a.dtype()).device(a.device());
   MARLIN_NAMESPACE_NAME::Tensor c;
-  if (c_or_none.has_value()) {
+  if (c_or_none) {
     c = c_or_none.value();
     PADDLE_ENFORCE(c.is_gpu(), "c is not on GPU");
     PADDLE_ENFORCE(c.is_contiguous(), "c is not contiguous");
@@ -806,7 +807,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
 
   bool has_act_order = false;
   MARLIN_NAMESPACE_NAME::Tensor g_idx, perm, a_tmp;
-  if (g_idx_or_none.has_value() && perm_or_none.has_value()) {
+  if (g_idx_or_none && perm_or_none) {
     g_idx = g_idx_or_none.value();
     perm = perm_or_none.value();
 
@@ -858,7 +859,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
   }
 
   MARLIN_NAMESPACE_NAME::Tensor global_scale;
-  if (global_scale_or_none.has_value()) {
+  if (global_scale_or_none) {
     global_scale = global_scale_or_none.value();
     PADDLE_ENFORCE(b_q_type == MARLIN_NAMESPACE_NAME::kFE2M1f,
                 "global_scale can only be used for float4_e2m1f.");
@@ -870,7 +871,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
   }
 
   MARLIN_NAMESPACE_NAME::Tensor b_zeros;
-  if (b_zeros_or_none.has_value()) {
+  if (b_zeros_or_none) {
     b_zeros = b_zeros_or_none.value();
     PADDLE_ENFORCE(b_zeros.is_gpu(), "b_zeros is not on GPU");
     PADDLE_ENFORCE(b_zeros.is_contiguous(), "b_zeros is not contiguous");
@@ -982,15 +983,15 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
   return c;
 }
 
-paddle::Tensor moe_wna16_marlin_gemm_api(
+paddle::Tensor MoeWna16MarlinGemmApi(
     const paddle::Tensor& a,
-    const std::optional<paddle::Tensor>& c_or_none,
+    const paddle::optional<paddle::Tensor>& c_or_none,
     const paddle::Tensor& b_q_weight,
     const paddle::Tensor& b_scales,
-    const std::optional<paddle::Tensor>& global_scale_or_none,
-    const std::optional<paddle::Tensor>& b_zeros_or_none,
-    const std::optional<paddle::Tensor>& g_idx_or_none,
-    const std::optional<paddle::Tensor>& perm_or_none,
+    const paddle::optional<paddle::Tensor>& global_scale_or_none,
+    const paddle::optional<paddle::Tensor>& b_zeros_or_none,
+    const paddle::optional<paddle::Tensor>& g_idx_or_none,
+    const paddle::optional<paddle::Tensor>& perm_or_none,
     const paddle::Tensor& workspace,
     const paddle::Tensor& sorted_token_ids,
     const paddle::Tensor& expert_ids,
@@ -1017,15 +1018,15 @@ paddle::Tensor moe_wna16_marlin_gemm_api(
   auto num_tokens_padded_   = ConvertPaddleTensorToDetailTensor(num_tokens_post_padded);
   auto topk_weights_        = ConvertPaddleTensorToDetailTensor(topk_weights);
 
-  std::optional<MARLIN_NAMESPACE_NAME::Tensor> c_opt_ =
+  paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> c_opt_ =
       ConvertOptionalPaddleTensorToDetailTensor(c_or_none);
-  std::optional<MARLIN_NAMESPACE_NAME::Tensor> global_scale_opt_ =
+  paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> global_scale_opt_ =
       ConvertOptionalPaddleTensorToDetailTensor(global_scale_or_none);
-  std::optional<MARLIN_NAMESPACE_NAME::Tensor> b_zeros_opt_ =
+  paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> b_zeros_opt_ =
       ConvertOptionalPaddleTensorToDetailTensor(b_zeros_or_none);
-  std::optional<MARLIN_NAMESPACE_NAME::Tensor> g_idx_opt_ =
+  paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> g_idx_opt_ =
       ConvertOptionalPaddleTensorToDetailTensor(g_idx_or_none);
-  std::optional<MARLIN_NAMESPACE_NAME::Tensor> perm_opt_ =
+  paddle::optional<MARLIN_NAMESPACE_NAME::Tensor> perm_opt_ =
       ConvertOptionalPaddleTensorToDetailTensor(perm_or_none);
 
   MARLIN_NAMESPACE_NAME::ScalarTypeId b_q_type_id;
@@ -1064,4 +1065,65 @@ paddle::Tensor moe_wna16_marlin_gemm_api(
 
   return ConvertDetailTensorToPaddleTensor(out_detail);
 }
+
+std::vector<std::vector<int64_t>> MoeWna16MarlinGemmInferShape(
+    const std::vector<int64_t>& a_shape,
+    const paddle::optional<std::vector<int64_t>>& c_shape,
+    const std::vector<int64_t>& b_q_weight_shape,
+    const std::vector<int64_t>& b_scales_shape,
+    const paddle::optional<std::vector<int64_t>>& global_scale_shape,
+    const paddle::optional<std::vector<int64_t>>& b_zeros_shape,
+    const paddle::optional<std::vector<int64_t>>& g_idx_shape,
+    const paddle::optional<std::vector<int64_t>>& perm_shape,
+    const std::vector<int64_t>& workspace_shape,
+    const std::vector<int64_t>& sorted_token_ids_shape,
+    const std::vector<int64_t>& expert_ids_shape,
+    const std::vector<int64_t>& num_tokens_post_padded_shape,
+    const std::vector<int64_t>& topk_weights_shape,
+    int64_t moe_block_size,
+    int64_t top_k,
+    bool mul_topk_weights,
+    bool is_ep,
+    const std::string& b_q_type_str,
+    int64_t size_m,
+    int64_t size_n,
+    int64_t size_k,
+    bool is_k_full,
+    bool use_atomic_add,
+    bool use_fp32_reduce,
+    bool is_zp_float) {
+  return {{size_m * top_k, size_n}};
+}
+
+std::vector<paddle::DataType> MoeWna16MarlinGemmInferDtype(
+    const paddle::DataType& a_dtype,
+    const paddle::optional<paddle::DataType>& c_dtype,
+    const paddle::DataType& b_q_weight_dtype,
+    const paddle::DataType& b_scales_dtype,
+    const paddle::optional<paddle::DataType>& global_scale_dtype,
+    const paddle::optional<paddle::DataType>& b_zeros_dtype,
+    const paddle::optional<paddle::DataType>& g_idx_dtype,
+    const paddle::optional<paddle::DataType>& perm_dtype,
+    const paddle::DataType& workspace_dtype,
+    const paddle::DataType& sorted_token_ids_dtype,
+    const paddle::DataType& expert_ids_dtype,
+    const paddle::DataType& num_tokens_post_padded_dtype,
+    const paddle::DataType& topk_weights_dtype) {
+  return {a_dtype};
+}
 #endif
+
+PD_BUILD_STATIC_OP(moe_wna16_marlin_gemm)
+    .Inputs({"a", paddle::Optional("c_or_none"), "b_q_weight", "b_scales",
+             paddle::Optional("global_scale_or_none"), paddle::Optional("b_zeros_or_none"),
+             paddle::Optional("g_idx_or_none"), paddle::Optional("perm_or_none"), "workspace",
+             "sorted_token_ids", "expert_ids", "num_tokens_post_padded",
+             "topk_weights"})
+    .Outputs({"out"})
+    .Attrs({"moe_block_size:int", "top_k:int", "mul_topk_weights:bool",
+            "is_ep:bool", "b_q_type_str:std::string", "size_m:int",
+            "size_n:int", "size_k:int", "is_k_full:bool",
+            "use_atomic_add:bool", "use_fp32_reduce:bool", "is_zp_float:bool"})
+    .SetKernelFn(PD_KERNEL(MARLIN_NAMESPACE_NAME::MoeWna16MarlinGemmApi))
+    .SetInferShapeFn(PD_INFER_SHAPE(MARLIN_NAMESPACE_NAME::MoeWna16MarlinGemmInferShape))
+    .SetInferDtypeFn(PD_INFER_DTYPE(MARLIN_NAMESPACE_NAME::MoeWna16MarlinGemmInferDtype));

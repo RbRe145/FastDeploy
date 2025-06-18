@@ -27,7 +27,7 @@ using StreamId = int64_t;
 
 class CUDAStream {
  public:
-  CUDAStream() { LOG(FATAL) << "CUDAStream::CUDAStream() is not implemented"; }
+  CUDAStream() {}
   explicit CUDAStream(const cudaStream_t& stream) : raw_stream_(stream) {}
   StreamId id() const { return reinterpret_cast<StreamId>(raw_stream_); }
 

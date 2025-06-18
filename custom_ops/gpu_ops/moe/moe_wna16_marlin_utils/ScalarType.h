@@ -369,4 +369,4 @@ constexpr auto kBFloat16 = phi::DataType::BFLOAT16;
 constexpr auto kFloat32 = phi::DataType::FLOAT32;
 constexpr auto kByte = phi::DataType::INT8;
 
-};  // namespace detail
+};  // namespace Marlin

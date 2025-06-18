@@ -9,7 +9,7 @@
 #include "moe/moe_wna16_marlin_utils/kernel.h"
 #include "moe/moe_wna16_marlin_utils/types.h"
 
-paddle::Tensor moe_wna16_marlin_gemm_api(
+paddle::Tensor MoeWna16MarlinGemmApi(
     const paddle::Tensor& a,
     const std::optional<paddle::Tensor>& c_or_none,
     const paddle::Tensor& b_q_weight,

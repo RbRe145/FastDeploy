@@ -86,9 +86,9 @@ __global__ void Marlin(
 // m16n8k16 tensor core mma instruction with fp16 inputs and fp32
 // output/accumulation.
 template <typename scalar_t>
-__device__ inline void mma(const typename ScalarType<scalar_t>::FragA& a_frag,
-                           const typename ScalarType<scalar_t>::FragB& frag_b,
-                           typename ScalarType<scalar_t>::FragC& frag_c) {
+__device__ inline void mma(const typename kernel_types::ScalarType<scalar_t>::FragA& a_frag,
+                           const typename kernel_types::ScalarType<scalar_t>::FragB& frag_b,
+                           typename kernel_types::ScalarType<scalar_t>::FragC& frag_c) {
   const uint32_t* a = reinterpret_cast<const uint32_t*>(&a_frag);
   const uint32_t* b = reinterpret_cast<const uint32_t*>(&frag_b);
   float* c = reinterpret_cast<float*>(&frag_c);
@@ -113,10 +113,10 @@ __device__ inline void mma(const typename ScalarType<scalar_t>::FragA& a_frag,
 
 template <typename scalar_t>
 __device__ inline void mma_trans(
-    const typename ScalarType<scalar_t>::FragA& a_frag,
-    const typename ScalarType<scalar_t>::FragB& frag_b,
-    const typename ScalarType<scalar_t>::FragB& frag_b2,
-    typename ScalarType<scalar_t>::FragC& frag_c) {
+    const typename kernel_types::ScalarType<scalar_t>::FragA& a_frag,
+    const typename kernel_types::ScalarType<scalar_t>::FragB& frag_b,
+    const typename kernel_types::ScalarType<scalar_t>::FragB& frag_b2,
+    typename kernel_types::ScalarType<scalar_t>::FragC& frag_c) {
   const uint32_t* a = reinterpret_cast<const uint32_t*>(&a_frag);
   const uint32_t* b = reinterpret_cast<const uint32_t*>(&frag_b);
   const uint32_t* b2 = reinterpret_cast<const uint32_t*>(&frag_b2);
@@ -143,7 +143,7 @@ __device__ inline void mma_trans(
 // Instruction for loading a full 16x16 matrix fragment of operand A from shared
 // memory, directly in tensor core layout.
 template <int count, typename scalar_t>
-__device__ inline void ldsm(typename ScalarType<scalar_t>::FragA& frag_a,
+__device__ inline void ldsm(typename kernel_types::ScalarType<scalar_t>::FragA& frag_a,
                             const void* smem_ptr) {
   uint32_t* a = reinterpret_cast<uint32_t*>(&frag_a);
   uint32_t smem = static_cast<uint32_t>(__cvta_generic_to_shared(smem_ptr));
@@ -168,46 +168,46 @@ __device__ inline void ldsm(typename ScalarType<scalar_t>::FragA& frag_a,
 // Multiply dequantized values by the corresponding quantization scale; used
 // only for grouped quantization.
 template <typename scalar_t>
-__device__ inline void scale(typename ScalarType<scalar_t>::FragB& frag_b,
-                             typename ScalarType<scalar_t>::FragS& frag_s,
+__device__ inline void scale(typename kernel_types::ScalarType<scalar_t>::FragB& frag_b,
+                             typename kernel_types::ScalarType<scalar_t>::FragS& frag_s,
                              int i) {
-  using scalar_t2 = typename ScalarType<scalar_t>::scalar_t2;
+  using scalar_t2 = typename kernel_types::ScalarType<scalar_t>::scalar_t2;
   scalar_t2 s =
-      ScalarType<scalar_t>::num2num2(reinterpret_cast<scalar_t*>(&frag_s)[i]);
+      kernel_types::ScalarType<scalar_t>::num2num2(reinterpret_cast<scalar_t*>(&frag_s)[i]);
   frag_b[0] = __hmul2(frag_b[0], s);
   frag_b[1] = __hmul2(frag_b[1], s);
 }
 
 template <typename scalar_t>
 __device__ inline void scale_and_sub(
-    typename ScalarType<scalar_t>::FragB& frag_b, scalar_t s, scalar_t zp) {
-  using scalar_t2 = typename ScalarType<scalar_t>::scalar_t2;
-  scalar_t2 s2 = ScalarType<scalar_t>::num2num2(s);
-  scalar_t2 zp2 = ScalarType<scalar_t>::num2num2(zp);
+    typename kernel_types::ScalarType<scalar_t>::FragB& frag_b, scalar_t s, scalar_t zp) {
+  using scalar_t2 = typename kernel_types::ScalarType<scalar_t>::scalar_t2;
+  scalar_t2 s2 = kernel_types::ScalarType<scalar_t>::num2num2(s);
+  scalar_t2 zp2 = kernel_types::ScalarType<scalar_t>::num2num2(zp);
   frag_b[0] = __hfma2(frag_b[0], s2, __hneg2(zp2));
   frag_b[1] = __hfma2(frag_b[1], s2, __hneg2(zp2));
 }
 
 template <typename scalar_t>
-__device__ inline void sub_zp(typename ScalarType<scalar_t>::FragB& frag_b,
-                              typename ScalarType<scalar_t>::scalar_t2& frag_zp,
+__device__ inline void sub_zp(typename kernel_types::ScalarType<scalar_t>::FragB& frag_b,
+                              typename kernel_types::ScalarType<scalar_t>::scalar_t2& frag_zp,
                               int i) {
-  using scalar_t2 = typename ScalarType<scalar_t>::scalar_t2;
+  using scalar_t2 = typename kernel_types::ScalarType<scalar_t>::scalar_t2;
   scalar_t2 zp =
-      ScalarType<scalar_t>::num2num2(reinterpret_cast<scalar_t*>(&frag_zp)[i]);
+      kernel_types::ScalarType<scalar_t>::num2num2(reinterpret_cast<scalar_t*>(&frag_zp)[i]);
   frag_b[0] = __hsub2(frag_b[0], zp);
   frag_b[1] = __hsub2(frag_b[1], zp);
 }
 
 // Same as above, but for act_order (each K is multiplied individually)
 template <typename scalar_t>
-__device__ inline void scale4(typename ScalarType<scalar_t>::FragB& frag_b,
-                              typename ScalarType<scalar_t>::FragS& frag_s_1,
-                              typename ScalarType<scalar_t>::FragS& frag_s_2,
-                              typename ScalarType<scalar_t>::FragS& frag_s_3,
-                              typename ScalarType<scalar_t>::FragS& frag_s_4,
+__device__ inline void scale4(typename kernel_types::ScalarType<scalar_t>::FragB& frag_b,
+                              typename kernel_types::ScalarType<scalar_t>::FragS& frag_s_1,
+                              typename kernel_types::ScalarType<scalar_t>::FragS& frag_s_2,
+                              typename kernel_types::ScalarType<scalar_t>::FragS& frag_s_3,
+                              typename kernel_types::ScalarType<scalar_t>::FragS& frag_s_4,
                               int i) {
-  using scalar_t2 = typename ScalarType<scalar_t>::scalar_t2;
+  using scalar_t2 = typename kernel_types::ScalarType<scalar_t>::scalar_t2;
   scalar_t2 s_val_1_2;
   s_val_1_2.x = reinterpret_cast<scalar_t*>(&frag_s_1)[i];
   s_val_1_2.y = reinterpret_cast<scalar_t*>(&frag_s_2)[i];
@@ -223,10 +223,10 @@ __device__ inline void scale4(typename ScalarType<scalar_t>::FragB& frag_b,
 // Given 2 floats multiply by 2 scales (halves)
 template <typename scalar_t>
 __device__ inline void scale_float(float* c,
-                                   typename ScalarType<scalar_t>::FragS& s) {
+                                   typename kernel_types::ScalarType<scalar_t>::FragS& s) {
   scalar_t* s_ptr = reinterpret_cast<scalar_t*>(&s);
-  c[0] = __fmul_rn(c[0], ScalarType<scalar_t>::num2float(s_ptr[0]));
-  c[1] = __fmul_rn(c[1], ScalarType<scalar_t>::num2float(s_ptr[1]));
+  c[0] = __fmul_rn(c[0], kernel_types::ScalarType<scalar_t>::num2float(s_ptr[0]));
+  c[1] = __fmul_rn(c[1], kernel_types::ScalarType<scalar_t>::num2float(s_ptr[1]));
 }
 
 // Wait until barrier reaches `count`, then lock for current threadblock.
@@ -332,13 +332,13 @@ __global__ void Marlin(
   // ensures good utilization of all SMs for many kinds of shape and GPU
   // configurations, while requiring as few slow global cross-threadblock
   // reductions as possible.
-  using Dtype = ScalarType<scalar_t>;
-  using scalar_t2 = typename ScalarType<scalar_t>::scalar_t2;
-  using FragA = typename ScalarType<scalar_t>::FragA;
-  using FragB = typename ScalarType<scalar_t>::FragB;
-  using FragC = typename ScalarType<scalar_t>::FragC;
-  using FragS = typename ScalarType<scalar_t>::FragS;
-  using FragZP = typename ScalarType<scalar_t>::FragZP;
+  using Dtype = kernel_types::ScalarType<scalar_t>;
+  using scalar_t2 = typename kernel_types::ScalarType<scalar_t>::scalar_t2;
+  using FragA = typename kernel_types::ScalarType<scalar_t>::FragA;
+  using FragB = typename kernel_types::ScalarType<scalar_t>::FragB;
+  using FragC = typename kernel_types::ScalarType<scalar_t>::FragC;
+  using FragS = typename kernel_types::ScalarType<scalar_t>::FragS;
+  using FragZP = typename kernel_types::ScalarType<scalar_t>::FragZP;
 
   extern __shared__ int4 sh[];
   static constexpr auto w_type = MARLIN_NAMESPACE_NAME::ScalarType::from_id(w_type_id);
