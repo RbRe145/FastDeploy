@@ -64,7 +64,7 @@ where `scale_factor * multiplier` can be computed at weight loading.
 */
 
 #include "moe/moe_wna16_marlin_utils/marlin_dtypes.cuh"
-#include "moe/moe_wna16_marlin_utils/types.h"
+#include "moe/moe_wna16_marlin_utils/ScalarType.h"
 
 namespace MARLIN_NAMESPACE_NAME {
 

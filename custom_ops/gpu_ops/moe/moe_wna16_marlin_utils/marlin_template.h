@@ -26,7 +26,7 @@
 #include "moe/moe_wna16_marlin_utils/marlin.cuh"
 #include "moe/moe_wna16_marlin_utils/marlin_dtypes.cuh"
 #include "moe/moe_wna16_marlin_utils/dequant.h"
-#include "moe/moe_wna16_marlin_utils/types.h"
+#include "moe/moe_wna16_marlin_utils/ScalarType.h"
 
 #define STATIC_ASSERT_SCALAR_TYPE_VALID(scalar_t)               \
   static_assert(std::is_same<scalar_t, half>::value ||          \

@@ -4,7 +4,7 @@
 #endif
 #include "moe/moe_wna16_marlin_utils/marlin.cuh"
 #include "moe/moe_wna16_marlin_utils/marlin_dtypes.cuh"
-#include "moe/moe_wna16_marlin_utils/types.h"
+#include "moe/moe_wna16_marlin_utils/ScalarType.h"
 
 #define MARLIN_KERNEL_PARAMS                                          \
   const int4 *__restrict__ A, const int4 *__restrict__ B,             \
