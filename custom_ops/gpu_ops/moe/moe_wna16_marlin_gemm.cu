@@ -1109,9 +1109,9 @@ PD_BUILD_STATIC_OP(moe_wna16_marlin_gemm)
              "sorted_token_ids", "expert_ids", "num_tokens_post_padded",
              "topk_weights"})
     .Outputs({"out"})
-    .Attrs({"moe_block_size:int", "top_k:int", "mul_topk_weights:bool",
-            "is_ep:bool", "b_q_type_str:std::string", "size_m:int",
-            "size_n:int", "size_k:int", "is_k_full:bool",
+    .Attrs({"moe_block_size:int64_t", "top_k:int64_t", "mul_topk_weights:bool",
+            "is_ep:bool", "b_q_type_str:std::string", "size_m:int64_t",
+            "size_n:int64_t", "size_k:int64_t", "is_k_full:bool",
             "use_atomic_add:bool", "use_fp32_reduce:bool", "is_zp_float:bool"})
     .SetKernelFn(PD_KERNEL(MoeWna16MarlinGemmApi))
     .SetInferShapeFn(PD_INFER_SHAPE(MoeWna16MarlinGemmInferShape))
