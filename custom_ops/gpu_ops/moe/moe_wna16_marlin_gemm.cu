@@ -974,7 +974,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
   return c;
 }
 
-paddle::Tensor MoeWna16MarlinGemmApi(
+std::vector<paddle::Tensor> MoeWna16MarlinGemmApi(
     const paddle::Tensor& a,
     const paddle::optional<paddle::Tensor>& c_or_none,
     const paddle::Tensor& b_q_weight,
@@ -1053,8 +1053,8 @@ paddle::Tensor MoeWna16MarlinGemmApi(
       use_atomic_add,
       use_fp32_reduce,
       is_zp_float);
-
-  return ConvertDetailTensorToPaddleTensor(out_detail);
+  paddle::Tensor out = ConvertDetailTensorToPaddleTensor(out_detail);
+  return {out};
 }
 
 std::vector<std::vector<int64_t>> MoeWna16MarlinGemmInferShape(
