@@ -43,6 +43,8 @@ struct Tensor {
 
   decltype(auto) numel() const { return raw_tensor_.numel(); }
 
+  decltype(auto) stream() const { return raw_tensor_.stream(); }
+
   int64_t dim() const { return raw_tensor_.dims().size(); }
 
   bool is_contiguous() const { return true; }

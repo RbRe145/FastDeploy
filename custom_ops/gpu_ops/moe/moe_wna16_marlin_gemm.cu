@@ -943,7 +943,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
         topk_weights.data_ptr(), moe_block_size, top_k, mul_topk_weights, is_ep,
         size_m, size_n, size_k, workspace.data_ptr(), b_q_type, has_act_order,
         is_k_full, has_zp, num_groups, group_size, device_id,
-        0, thread_k, thread_n, sms,
+        a.stream(), thread_k, thread_n, sms,
         use_atomic_add, use_fp32_reduce, is_zp_float);
   } else if (a.dtype() == MARLIN_NAMESPACE_NAME::kBFloat16) {
     using DataType = phi::dtype::bfloat16;
@@ -964,7 +964,7 @@ MARLIN_NAMESPACE_NAME::Tensor moe_wna16_marlin_gemm(
         num_tokens_past_padded.data_ptr(), topk_weights.data_ptr(),
         moe_block_size, top_k, mul_topk_weights, is_ep, size_m, size_n, size_k,
         workspace.data_ptr(), b_q_type, has_act_order, is_k_full, has_zp,
-        num_groups, group_size, device_id, 0,
+        num_groups, group_size, device_id, a.stream(),
         thread_k, thread_n, sms, use_atomic_add, use_fp32_reduce, is_zp_float);
   } else {
     PADDLE_ENFORCE(false,
@@ -1023,7 +1023,9 @@ std::vector<paddle::Tensor> MoeWna16MarlinGemmApi(
   MARLIN_NAMESPACE_NAME::ScalarTypeId b_q_type_id;
   if (b_q_type_str == "uint4") {
     b_q_type_id = MARLIN_NAMESPACE_NAME::kU4.id();
-  } else {
+  }else if (b_q_type_str == "uint4b8") {
+    b_q_type_id = MARLIN_NAMESPACE_NAME::kU4B8.id();
+  }else {
     PADDLE_ENFORCE(false, "b_q_type_str not supported!");
   }
 
